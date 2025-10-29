@@ -1,0 +1,800 @@
+{
+	"info": {
+		"_postman_id": "8c4768b1-532b-48dc-82ca-896bd7e7e8d3",
+		"name": "Sistema Indústria 4.0 - JWT",
+		"description": "Collection completa para testar todas as funcionalidades da API com JWT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49628396",
+		"_collection_link": "https://diogusvincere-4828821.postman.co/workspace/ed7401ce-73f7-4757-866f-4e35dbbc99cb/collection/49628396-8c4768b1-532b-48dc-82ca-896bd7e7e8d3?action=share&source=collection_link&creator=49628396"
+	},
+	"item": [
+		{
+			"name": "Autenticação JWT",
+			"item": [
+				{
+					"name": "1. Criar Funcionário (Registro)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin001\",\n  \"numero_registro\": \"123456\",\n  \"email\": \"admin@empresa.com\",\n  \"cpf\": \"111.111.111-11\",\n  \"first_name\": \"João\",\n  \"last_name\": \"Admin\",\n  \"data_contratacao\": \"2024-01-01\",\n  \"cargo\": \"ADMIN\",\n  \"password\": \"senha123\",\n  \"re_password\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Login - Obter JWT Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set(\"access_token\", jsonData.access);",
+									"pm.collectionVariables.set(\"refresh_token\", jsonData.refresh);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"numero_registro\": \"123456\",\n  \"password\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set(\"access_token\", jsonData.access);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Verificar Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"{{access_token}}\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Usuário Atual (Me)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Setup - Criar Usuários",
+			"item": [
+				{
+					"name": "Criar Funcionário PRODUÇÃO",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"prod001\",\n  \"numero_registro\": \"234567\",\n  \"email\": \"producao@empresa.com\",\n  \"cpf\": \"222.222.222-22\",\n  \"first_name\": \"Maria\",\n  \"last_name\": \"Santos\",\n  \"data_contratacao\": \"2024-01-15\",\n  \"cargo\": \"PRODUCAO\",\n  \"password\": \"senha123\",\n  \"re_password\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Funcionário INSPEÇÃO",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"insp001\",\n  \"numero_registro\": \"345678\",\n  \"email\": \"inspecao@empresa.com\",\n  \"cpf\": \"333.333.333-33\",\n  \"first_name\": \"Carlos\",\n  \"last_name\": \"Oliveira\",\n  \"data_contratacao\": \"2024-02-01\",\n  \"cargo\": \"INSPECAO\",\n  \"password\": \"senha123\",\n  \"re_password\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Funcionário MANUTENÇÃO",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"manut001\",\n  \"numero_registro\": \"456789\",\n  \"email\": \"manutencao@empresa.com\",\n  \"cpf\": \"444.444.444-44\",\n  \"first_name\": \"Ana\",\n  \"last_name\": \"Costa\",\n  \"data_contratacao\": \"2024-01-20\",\n  \"cargo\": \"MANUTENCAO\",\n  \"password\": \"senha123\",\n  \"re_password\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Funcionário LÍDER PRODUÇÃO",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"lider001\",\n  \"numero_registro\": \"567890\",\n  \"email\": \"lider@empresa.com\",\n  \"cpf\": \"555.555.555-55\",\n  \"first_name\": \"Pedro\",\n  \"last_name\": \"Almeida\",\n  \"data_contratacao\": \"2023-12-01\",\n  \"cargo\": \"LIDER_PRODUCAO\",\n  \"password\": \"senha123\",\n  \"re_password\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Produtos",
+			"item": [
+				{
+					"name": "Listar Produtos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Produto 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Parafuso M10\",\n  \"codigo\": \"PROD001\",\n  \"descricao\": \"Parafuso métrico 10mm\",\n  \"categoria\": \"Fixação\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Produto 2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Porca M10\",\n  \"codigo\": \"PROD002\",\n  \"descricao\": \"Porca métrica 10mm\",\n  \"categoria\": \"Fixação\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar por Categoria",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Máquinas (MANUTENÇÃO)",
+			"item": [
+				{
+					"name": "Listar Máquinas Detalhado",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Máquina",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo_identificador\": \"MAQ001\",\n  \"nome\": \"Torno CNC\",\n  \"descricao\": \"Torno CNC de alta precisão\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Máquina 2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo_identificador\": \"MAQ002\",\n  \"nome\": \"Fresadora Industrial\",\n  \"descricao\": \"Fresadora de alta capacidade\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Máquinas Precisam Manutenção",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Manutenções (MANUTENÇÃO)",
+			"item": [
+				{
+					"name": "Listar Manutenções",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Manutenção",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"maquina\": 1,\n  \"data_hora\": \"2024-10-01T10:00:00Z\",\n  \"descricao\": \"Troca de óleo e limpeza geral\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Manutenção Antiga",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"maquina\": 2,\n  \"data_hora\": \"2024-06-01T10:00:00Z\",\n  \"descricao\": \"Manutenção preventiva há 4 meses\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Lotes (PRODUÇÃO)",
+			"item": [
+				{
+					"name": "Listar Lotes Detalhado",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Lote",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"LOTE001\",\n  \"produto\": 1,\n  \"data_hora_inicio\": \"2024-10-15T08:00:00Z\",\n  \"data_hora_finalizacao\": \"2024-10-15T16:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Lote 2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"LOTE002\",\n  \"produto\": 2,\n  \"data_hora_inicio\": \"2024-10-16T08:00:00Z\",\n  \"data_hora_finalizacao\": \"2024-10-16T16:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar - Aprovar Lote",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data_inspecao\": \"2024-10-17\",\n  \"responsavel_inspecao\": 3,\n  \"status_inspecao\": \"APROVADO\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar - Reprovar Lote",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data_inspecao\": \"2024-10-17\",\n  \"responsavel_inspecao\": 3,\n  \"status_inspecao\": \"REPROVADO\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lotes Não Inspecionados",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Produção Reprovada - Filtros",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Itens de Produção (PRODUÇÃO)",
+			"item": [
+				{
+					"name": "Listar Itens",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Item Produção - Lote 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"lote\": 1,\n  \"data_hora\": \"2024-10-15T09:00:00Z\",\n  \"maquina\": 1\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Múltiplos Itens - Lote 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"lote\": 1,\n  \"data_hora\": \"2024-10-15T10:00:00Z\",\n  \"maquina\": 1\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Item - Lote 2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"lote\": 2,\n  \"data_hora\": \"2024-10-16T09:00:00Z\",\n  \"maquina\": 2\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dashboard (LÍDER PRODUÇÃO)",
+			"item": [
+				{
+					"name": "Estatísticas Gerais",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Estatísticas por Funcionário",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Testes de Permissões",
+			"item": [
+				{
+					"name": "Tentar Criar Máquina (PRODUÇÃO) - DEVE FALHAR",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo_identificador\": \"MAQ999\",\n  \"nome\": \"Teste\",\n  \"descricao\": \"Deve falhar\"\n}"
+						},
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Dashboard como PRODUÇÃO - DEVE FALHAR",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api"
+		},
+		{
+			"key": "access_token",
+			"value": ""
+		},
+		{
+			"key": "refresh_token",
+			"value": ""
+		}
+	]
+}
