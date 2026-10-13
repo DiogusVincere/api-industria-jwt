@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
+# Com USER_CREATE_PASSWORD_RETYPE=True o Djoser exige re_password e usa o serializer
+# "retype"; herdar dele mantém a conferência da senha repetida.
+from djoser.serializers import UserCreatePasswordRetypeSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from .models import (
     Funcionario, Produto, Maquina, Manutencao, 
@@ -8,7 +10,11 @@ from .models import (
 
 # Serializadores para Funcionário (Usuário customizado)
 class FuncionarioCreateSerializer(BaseUserCreateSerializer):
-    """Serializer para criar funcionário com Djoser"""
+    """
+    Serializer do cadastro pelo Djoser (POST /api/auth/users/): além dos campos
+    padrão, grava cpf, data_contratacao, cargo e username. Precisa estar nas duas
+    chaves do DJOSER["SERIALIZERS"] (user_create e user_create_password_retype).
+    """
     class Meta(BaseUserCreateSerializer.Meta):
         model = Funcionario
         fields = [
@@ -18,6 +24,26 @@ class FuncionarioCreateSerializer(BaseUserCreateSerializer):
         extra_kwargs = {
             'password': {'write_only': True}
         }
+
+    def validate_cargo(self, cargo):
+        """
+        O cadastro aberto do Djoser (POST /api/auth/users/, sem token) continua
+        valendo para os cargos operacionais, mas não cria ADMIN: um funcionário
+        com cargo ADMIN só é cadastrado por quem já é ADMIN (ou superusuário)
+        autenticado. O primeiro ADMIN vem do createsuperuser ou do seed_demo.
+        """
+        if cargo == Cargo.ADMIN:
+            request = self.context.get('request')
+            usuario = getattr(request, 'user', None)
+            e_admin = bool(
+                usuario and usuario.is_authenticated
+                and (usuario.cargo == Cargo.ADMIN or usuario.is_superuser)
+            )
+            if not e_admin:
+                raise serializers.ValidationError(
+                    'Só um administrador autenticado pode cadastrar um funcionário com cargo ADMIN.'
+                )
+        return cargo
 
 class FuncionarioSerializer(BaseUserSerializer):
     """Serializer para exibir funcionário"""
@@ -32,7 +58,7 @@ class FuncionarioSerializer(BaseUserSerializer):
             'data_contratacao', 'cargo', 'cargo_display'
         ]
     
-    def get_nome_completo(self, obj):
+    def get_nome_completo(self, obj) -> str:
         return obj.get_full_name()
 
 # Serializadores para Produto
@@ -87,7 +113,7 @@ class MaquinaDetalhadaSerializer(serializers.ModelSerializer):
             'descricao', 'manutencoes', 'precisa_manutencao'
         ]
     
-    def get_precisa_manutencao(self, obj):
+    def get_precisa_manutencao(self, obj) -> bool:
         return obj.precisa_manutencao()
 
 # Serializadores para Item de Produção
@@ -147,5 +173,5 @@ class LoteDetalhadoSerializer(serializers.ModelSerializer):
             'itens_producao', 'total_itens'
         ]
     
-    def get_total_itens(self, obj):
+    def get_total_itens(self, obj) -> int:
         return obj.itens_producao.count()

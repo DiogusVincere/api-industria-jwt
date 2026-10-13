@@ -43,6 +43,16 @@ CORS_ALLOW_ALL_ORIGINS = _bool(os.environ.get("CORS_ALLOW_ALL_ORIGINS"), padrao=
 CORS_ALLOWED_ORIGINS = _lista(os.environ.get("CORS_ALLOWED_ORIGINS"))
 CORS_ALLOW_CREDENTIALS = True
 
+# Origens confiáveis para o CSRF (admin e API navegável atrás de HTTPS).
+# Ex.: CSRF_TRUSTED_ORIGINS=https://*.onrender.com
+CSRF_TRUSTED_ORIGINS = _lista(os.environ.get("CSRF_TRUSTED_ORIGINS"))
+
+# Atrás de um proxy que termina o HTTPS (Render, Heroku...), o Django só sabe
+# que a conexão é segura pelo cabeçalho X-Forwarded-Proto. Ligue com
+# USE_X_FORWARDED_PROTO=True apenas quando houver um proxy confiável na frente.
+if _bool(os.environ.get("USE_X_FORWARDED_PROTO")):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # Aplicações
 
@@ -58,11 +68,15 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "djoser",
     "django_filters",
+    "drf_spectacular",
     "somativa_app",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # WhiteNoise serve os arquivos estáticos (admin, API navegável) com DEBUG=False,
+    # sem precisar de servidor web na frente. Precisa vir logo após o SecurityMiddleware.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -124,7 +138,14 @@ USE_TZ = True
 # Arquivos estáticos e de mídia (fotos das máquinas)
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = BASE_DIR / "staticfiles"  # destino do collectstatic (lido pelo WhiteNoise)
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    # Comprimido (gzip/brotli) e sem manifesto: um arquivo que faltar no
+    # collectstatic não derruba a página, só deixa de ser servido.
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -155,6 +176,8 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
+    # Esquema OpenAPI gerado pelo drf-spectacular (Swagger em /api/docs/).
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 
@@ -192,7 +215,34 @@ DJOSER = {
     "ACTIVATION_URL": "activate/{uid}/{token}",
     "SERIALIZERS": {
         "user_create": "somativa_app.serializers.FuncionarioCreateSerializer",
+        # Com USER_CREATE_PASSWORD_RETYPE=True o Djoser usa esta chave no cadastro,
+        # não a de cima. Sem ela caía no serializer padrão, que ignora cpf, cargo e
+        # data_contratacao e falhava com "Não foi possível criar a conta".
+        "user_create_password_retype": "somativa_app.serializers.FuncionarioCreateSerializer",
         "user": "somativa_app.serializers.FuncionarioSerializer",
         "current_user": "somativa_app.serializers.FuncionarioSerializer",
+    },
+}
+
+
+# drf-spectacular: esquema OpenAPI 3 em /api/schema/, Swagger UI em /api/docs/
+# e ReDoc em /api/redoc/ (rotas em somativa/urls.py). As três são públicas; os
+# endpoints da API continuam exigindo o JWT, que se informa no botão "Authorize".
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "API Indústria 4.0",
+    "DESCRIPTION": (
+        "Controle de chão de fábrica: funcionários com cargos, produtos, máquinas e "
+        "manutenções, lotes de produção com inspeção de qualidade e dashboard de peças "
+        "aprovadas e reprovadas. Autenticação por JWT: obtenha o token em "
+        "`POST /api/auth/jwt/create/` com `numero_registro` e `password` e informe "
+        "`Bearer <access>` no botão Authorize."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+        "displayRequestDuration": True,
     },
 }

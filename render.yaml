@@ -1,0 +1,26 @@
+# Blueprint do Render (https://render.com/docs/blueprint-spec): "New > Blueprint"
+# apontando para este repositório sobe a API no plano gratuito, com SQLite no
+# disco do serviço. Esse disco é efêmero: a cada deploy ou reinício o banco
+# recomeça, e o start recria os dados de demonstração com o seed_demo.
+services:
+  - type: web
+    name: api-industria-jwt
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate && python manage.py seed_demo && gunicorn somativa.wsgi:application
+    healthCheckPath: /api/docs/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com
+      # O Render termina o HTTPS e repassa X-Forwarded-Proto.
+      - key: USE_X_FORWARDED_PROTO
+        value: "True"

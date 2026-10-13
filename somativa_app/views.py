@@ -6,6 +6,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count
 from django.utils import timezone
 from datetime import datetime, timedelta
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
 
 from .models import (
     Funcionario, Produto, Maquina, Manutencao, 
@@ -48,6 +50,12 @@ class MaquinaViewSet(viewsets.ModelViewSet):
             return MaquinaDetalhadaSerializer
         return MaquinaSerializer
     
+    @extend_schema(
+        summary="Máquinas que precisam de manutenção",
+        description="Máquinas sem manutenção registrada ou com a última há mais de 90 dias. "
+                    "Cargo MANUTENCAO (ou ADMIN).",
+        responses=MaquinaDetalhadaSerializer(many=True),
+    )
     @action(detail=False, methods=['get'], permission_classes=[IsManutencao])
     def precisam_manutencao(self, request):
         """
@@ -107,6 +115,11 @@ class LoteViewSet(viewsets.ModelViewSet):
         
         return queryset
     
+    @extend_schema(
+        summary="Lotes pendentes de inspeção",
+        description="Cargo INSPECAO (ou ADMIN).",
+        responses=LoteDetalhadoSerializer(many=True),
+    )
     @action(detail=False, methods=['get'], permission_classes=[IsInspecao])
     def nao_inspecionados(self, request):
         """Retorna apenas lotes pendentes de inspeção"""
@@ -114,6 +127,17 @@ class LoteViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(lotes, many=True)
         return Response(serializer.data)
     
+    @extend_schema(
+        summary="Lotes reprovados",
+        description="Lotes com inspeção REPROVADO, filtráveis por período de início, máquina e categoria.",
+        parameters=[
+            OpenApiParameter("data_inicio", OpenApiTypes.DATE, description="Início do período (data de início do lote)."),
+            OpenApiParameter("data_fim", OpenApiTypes.DATE, description="Fim do período."),
+            OpenApiParameter("maquina", OpenApiTypes.INT, description="ID da máquina que produziu itens do lote."),
+            OpenApiParameter("categoria", OpenApiTypes.STR, description="Categoria do produto."),
+        ],
+        responses=LoteDetalhadoSerializer(many=True),
+    )
     @action(detail=False, methods=['get'])
     def producao_reprovada(self, request):
         """
@@ -163,6 +187,29 @@ class DashboardViewSet(viewsets.ViewSet):
     """
     permission_classes = [IsAuthenticated, IsLiderProducao]
     
+    @extend_schema(
+        summary="Peças e lotes aprovados e reprovados",
+        description="Conta os itens de produção e os lotes aprovados e reprovados, com percentuais. "
+                    "Cargo LIDER_PRODUCAO (ou ADMIN).",
+        parameters=[
+            OpenApiParameter("data_inicio", OpenApiTypes.DATE, description="Início do período (AAAA-MM-DD)."),
+            OpenApiParameter("data_fim", OpenApiTypes.DATE, description="Fim do período (AAAA-MM-DD)."),
+            OpenApiParameter("funcionario", OpenApiTypes.INT, description="ID do funcionário inspetor."),
+        ],
+        responses={200: OpenApiTypes.OBJECT},
+        examples=[
+            OpenApiExample(
+                "Exemplo",
+                response_only=True,
+                value={
+                    "pecas": {"aprovadas": 5, "reprovadas": 4, "total": 9,
+                              "percentual_aprovadas": 55.56, "percentual_reprovadas": 44.44},
+                    "lotes": {"aprovados": 1, "reprovados": 1, "total": 2},
+                    "filtros_aplicados": {"data_inicio": None, "data_fim": None, "funcionario_id": None},
+                },
+            )
+        ],
+    )
     @action(detail=False, methods=['get'])
     def estatisticas(self, request):
         """
